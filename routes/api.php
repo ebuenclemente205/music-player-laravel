@@ -18,4 +18,5 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     Route::get('/playlists/{playlistId}/songs', [PlaylistController::class, 'getSongsFromPlaylist']);
+    Route::get('/playlists/{playlistId}/random-songs', [PlaylistController::class, 'getRandomSongs']);
 });
