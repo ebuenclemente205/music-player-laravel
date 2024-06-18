@@ -39,7 +39,7 @@ This project implements a random song playback feature that ensures songs are no
 The `PlaylistController` class is responsible for handling requests related to playlists. In this case, it implements a `getRandomSongs` method that returns a random set of songs from a given playlist.
 
 ```
-phpOpen In EditorEditCopy code1public function getRandomSongs(Request $request, $playlistId)
+1public function getRandomSongs(Request $request, $playlistId)
 2{
 3    $playlist = Playlist::findOrFail($playlistId);
 4    $playedSongs = Session::get('played_songs', []);
@@ -63,3 +63,27 @@ phpOpen In EditorEditCopy code1public function getRandomSongs(Request $request, 
 ### PlaylistService
 
 The `PlaylistService` class is responsible for handling the business logic related to playlists. In this case, it implements a `getRandomSongs` method that returns a random set of songs from a given playlist, while ensuring that songs are not repeated consecutively and also avoiding playing songs from the same artist consecutively.
+
+```
+1public function getRandomSongs(Playlist $playlist, array $playedSongs, $limit = 8): Collection
+2{
+3    $songs = $playlist->songs()->get();
+4
+5    // Filter out already played songs
+6    $unplayedSongs = $songs->whereNotIn('id', $playedSongs);
+7
+8    // If no unplayed songs left, reset played songs array (handled in controller)
+9    if ($unplayedSongs->isEmpty()) {
+10        return collect(); // Return an empty collection to signal the controller to reset
+11    }
+12
+13    $filteredSongs = $this->filterSameArtistSongs($unplayedSongs, $playedSongs);
+14
+15    // If no songs remain after filtering, fallback to the unfiltered set
+16    if ($filteredSongs->isEmpty()) {
+17        $filteredSongs = $unplayedSongs;
+18    }
+19
+20    return $filteredSongs->shuffle()->take($limit);
+21}
+```
